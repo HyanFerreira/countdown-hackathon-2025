@@ -1,0 +1,199 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #FFF;
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 50px;
+    height: 100vh;
+    background-color: rgb(8, 8, 8);
+}
+
+.title {
+    text-align: center;
+    padding: 0 25px;
+}
+
+.description {
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.countdown,
+.countup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 30px;
+    border-radius: 20px;
+    border: 2px solid #FFF;
+}
+
+.countdown {
+    display: none;
+}
+
+.countup {
+    display: flex;
+}
+
+.countdown__group,
+.countup__group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.countdown__item,
+.countup__item {
+    font-size: 5rem;
+    font-weight: bold;
+    padding: 25px 20px;
+    margin: 10px;
+    border-radius: 10px;
+    background-color: rgba(27, 27, 27, 0.425);
+}
+
+.countdown__description,
+.countup__description {
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.seperator {
+    font-size: 5rem;
+    font-weight: bold;
+    color: #FFF;
+    margin-bottom: 40px;
+}
+
+.start__button {
+    padding: 15px 30px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #FFF;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: ease-in-out 0.3s;
+    background-color: rgba(27, 27, 27, 0.425);
+}
+
+.start__button:hover {
+    background-color: rgba(27, 27, 27, 0.8);
+}
+
+.credits__to__developer {
+    position: absolute;
+    bottom: 25px;
+    font-size: 0.8rem;
+}
+
+@keyframes alertTimer {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.alertTimer {
+    animation: alertTimer 1s ease-in-out infinite;
+}
+
+.btn__sound__unlock {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.ion__icon {
+    font-size: 2rem;
+    color: #FFF;
+}
+
+@media (max-width: 768px) {
+    .title {
+        font-size: 1.8rem;
+    }
+
+    .countdown,
+    .countup {
+        padding: 20px;
+        gap: 10px;
+    }
+
+    .countdown__group,
+    .countup__group {
+        margin-bottom: 20px;
+    }
+
+    .countdown__item,
+    .countup__item {
+        font-size: 3rem;
+        padding: 15px 10px;
+    }
+
+    .countdown__description,
+    .countup__description {
+        font-size: 1.2rem;
+    }
+
+    .seperator {
+        font-size: 3rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .title {
+        font-size: 1.6rem;
+    }
+
+    .countdown,
+    .countup {
+        padding: 10px;
+        gap: 0px;
+    }
+
+    .countdown__item,
+    .countup__item {
+        font-size: 1.5rem;
+        padding: 10px;
+    }
+
+    .countdown__description,
+    .countup__description {
+        font-size: 1rem;
+    }
+
+    .seperator {
+        font-size: 2.5rem;
+    }
+
+    .start__button {
+        font-size: 1.2rem;
+        padding: 10px 20px;
+    }
+
+    .credits__to__developer {
+        bottom: 10px;
+    }
+}

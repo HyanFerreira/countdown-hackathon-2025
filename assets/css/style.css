@@ -8,17 +8,40 @@
 
 .main {
     display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: rgb(8, 8, 8);
+}
+
+.container {
+    position: relative;
+    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 50px;
-    height: 100vh;
-    background-color: rgb(8, 8, 8);
+    /* width: 100%; */
+    /* max-width: 1200px; */
+    /* padding: 20px; */
+    /* border-radius: 20px; */
+    /* background-color: rgba(27, 27, 27, 0.425); */
+}
+
+.content__description__event {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
 }
 
 .title {
     text-align: center;
     padding: 0 25px;
+}
+
+.description__date {
+    font-size: 1.2rem;
+    text-align: center;
 }
 
 .description {
@@ -55,6 +78,8 @@
 
 .countdown__item,
 .countup__item {
+    width: 130px;
+    text-align: center;
     font-size: 5rem;
     font-weight: bold;
     padding: 25px 20px;
@@ -93,7 +118,9 @@
 }
 
 .credits__to__developer {
-    position: absolute;
+    /* position: absolute; */
+    width: 100%;
+    text-align: center;
     bottom: 25px;
     font-size: 0.8rem;
 }
@@ -148,6 +175,7 @@
 
     .countdown__item,
     .countup__item {
+        width: 100px;
         font-size: 3rem;
         padding: 15px 10px;
     }
@@ -175,7 +203,8 @@
 
     .countdown__item,
     .countup__item {
-        font-size: 1.5rem;
+        width: 80px;
+        font-size: 2rem;
         padding: 10px;
     }
 

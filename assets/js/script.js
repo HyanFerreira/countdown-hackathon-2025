@@ -1,3 +1,5 @@
+// Countdown Hackathon IFSP 2025 - Estrutura Reorganizada e Melhorada
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
 import {
   getDatabase,
@@ -6,203 +8,255 @@ import {
   set
 } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
 
-document.addEventListener("DOMContentLoaded", function() {
-  const firebaseConfig = {
-    apiKey: "AIzaSyBC2idiTTcEgViXqRCSt0WwqeLEtkNChKg",
-    authDomain: "countdown-hackathon.firebaseapp.com",
-    databaseURL: "https://countdown-hackathon-default-rtdb.firebaseio.com",
-    projectId: "countdown-hackathon",
-    storageBucket: "countdown-hackathon.appspot.com",
-    messagingSenderId: "531025729951",
-    appId: "1:531025729951:web:bb9044329e055355b145aa",
-    measurementId: "G-BZFMGS6MLF"
-  };
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyBC2idiTTcEgViXqRCSt0WwqeLEtkNChKg",
+  authDomain: "countdown-hackathon.firebaseapp.com",
+  databaseURL: "https://countdown-hackathon-default-rtdb.firebaseio.com",
+  projectId: "countdown-hackathon",
+  storageBucket: "countdown-hackathon.appspot.com",
+  messagingSenderId: "531025729951",
+  appId: "1:531025729951:web:bb9044329e055355b145aa",
+  measurementId: "G-BZFMGS6MLF"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const database = getDatabase(app);
-  const countdownRef = ref(database, "countdown");
+// Global Variables
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+const countdownRef = ref(database, "countdown");
+const startedCountdownRef = ref(database, "Startedcountdown");
 
-  const countdownDuration = 50 * 60 * 60; // 50 horas em segundos
-  let countdownInterval;
-  let countupInterval;
+const countdownDuration = 50 * 60 * 60; // 50 hours in seconds
+const eventStart = new Date("2025-07-05T09:00:00").getTime();
 
-  const countdownEl = document.querySelector(".countdown");
-  const countupEl = document.querySelector(".countup");
-  const description = document.querySelector(".description");
+let countdownInterval;
+let countupInterval;
 
-  // Elementos countdown
-  const hoursEl = document.querySelector(".countdown #hours");
-  const minutesEl = document.querySelector(".countdown #minutes");
-  const secondsEl = document.querySelector(".countdown #seconds");
+// Elements
+const countdownEl = document.querySelector(".countdown");
+const countupEl = document.querySelector(".countup");
+const description = document.querySelector(".description");
 
-  // Elementos countup
-  const daysUpEl = document.querySelector(".countup #days");
-  const hoursUpEl = document.querySelector(".countup #hours");
-  const minutesUpEl = document.querySelector(".countup #minutes");
-  const secondsUpEl = document.querySelector(".countup #seconds");
+const hoursEl = document.querySelector(".countdown #hours");
+const minutesEl = document.querySelector(".countdown #minutes");
+const secondsEl = document.querySelector(".countdown #seconds");
 
-  // Data do evento
-  const eventStart = new Date("2025-07-05T09:00:00").getTime();
+const hoursUpEl = document.querySelector(".countup #hours");
+const minutesUpEl = document.querySelector(".countup #minutes");
+const secondsUpEl = document.querySelector(".countup #seconds");
 
+const alertThreshold = 5400; // 1h30m
+const alertEndThreshold = 300; // 5 min
+
+// Event Listeners
+document.addEventListener("DOMContentLoaded", () => {
   startCountUp();
 
-  onValue(countdownRef, snapshot => {
-    const data = snapshot.val();
-    if (data && data.startTime > 0) {
-      startCountDown(data.startTime);
+  // Checar se countdown já começou e aplicar a cor correta
+  onValue(startedCountdownRef, snapshot => {
+    const started = snapshot.val() === true;
+    if (started) {
+      setTimerColor("green");
+    } else {
+      setTimerColor("default");
     }
   });
 
-  function startCountUp() {
-    clearInterval(countupInterval);
-    countupInterval = setInterval(() => {
+  onValue(countdownRef, snapshot => {
+    const data = snapshot.val();
+
+    if (data && data.startTime > 0) {
       const now = Date.now();
-      const remaining = Math.floor((eventStart - now) / 1000);
-
-      if (remaining <= 0) {
-        clearInterval(countupInterval);
-        countupEl.style.display = "none";
-        countdownEl.style.display = "flex";
-        description.innerText = "Contagem regressiva em andamento...";
-
-        // Verifica se já existe startTime no banco ANTES de criar um novo
-        onValue(
-          countdownRef,
-          snapshot => {
-            const data = snapshot.val();
-
-            if (data && data.startTime > 0) {
-              // Se já existir startTime, apenas começa o countdown
-              startCountDown(data.startTime);
-            } else {
-              // Se não existir, cria um novo startTime
-              const startTime = Date.now();
-              set(countdownRef, { startTime });
-            }
-          },
-          { onlyOnce: true }
-        ); // Escuta uma vez, não mantém ativo
-      } else {
-        const days = Math.floor(remaining / (3600 * 24));
-        const hours = Math.floor(remaining % (3600 * 24) / 3600);
-        const minutes = Math.floor(remaining % 3600 / 60);
-        const seconds = remaining % 60;
-
-        daysUpEl.innerText = String(days).padStart(2, "0");
-        hoursUpEl.innerText = String(hours).padStart(2, "0");
-        minutesUpEl.innerText = String(minutes).padStart(2, "0");
-        secondsUpEl.innerText = String(seconds).padStart(2, "0");
-
-        description.innerText = "Faltam...";
-      }
-    }, 1000);
-  }
-
-  function startCountDown(startTime) {
-    clearInterval(countdownInterval);
-
-    let alertOn = false; // para 1h30m
-    let alertEndOn = false; // para 1 min
-    let audioTimeout;
-
-    const alertOnRef = ref(database, "alertOn");
-    const alertEndOnRef = ref(database, "alertEndOn");
-
-    // Ler flags do Firebase só uma vez ao iniciar
-    onValue(
-      alertOnRef,
-      snapshot => {
-        alertOn = snapshot.val() === true;
-      },
-      { onlyOnce: true }
-    );
-
-    onValue(
-      alertEndOnRef,
-      snapshot => {
-        alertEndOn = snapshot.val() === true;
-      },
-      { onlyOnce: true }
-    );
-
-    countdownInterval = setInterval(() => {
-      const now = Date.now();
-      const elapsed = Math.floor((now - startTime) / 1000);
+      const elapsed = Math.floor((now - data.startTime) / 1000);
       const remaining = countdownDuration - elapsed;
 
-      if (remaining <= 0) {
-        description.innerText = "Tempo Esgotado!";
-        hoursEl.innerText = "00";
-        minutesEl.innerText = "00";
-        secondsEl.innerText = "00";
-        clearInterval(countdownInterval);
-
-        clearTimeout(audioTimeout);
-        return;
+      if (remaining <= alertThreshold) {
+        // 1h30m em segundos
+        setTimerColor("red");
+      } else if (remaining > alertThreshold) {
+        setTimerColor("green");
       }
+    } else {
+      // Countdown ainda não começou
+      onValue(
+        startedCountdownRef,
+        snap => {
+          const started = snap.val() === true;
+          setTimerColor(started ? "green" : "default");
+        },
+        { onlyOnce: true }
+      );
+    }
+  });
+});
 
-      const hours = Math.floor(remaining / 3600);
+function startCountUp() {
+  clearInterval(countupInterval);
+  countupInterval = setInterval(() => {
+    const now = Date.now();
+    const remaining = Math.floor((eventStart - now) / 1000);
+
+    if (remaining <= 0) {
+      clearInterval(countupInterval);
+      countupEl.style.display = "none";
+      countdownEl.style.display = "flex";
+      description.innerText = "Contagem regressiva em andamento...";
+
+      onValue(
+        countdownRef,
+        snapshot => {
+          const data = snapshot.val();
+          if (data && data.startTime > 0) {
+            startCountDown(data.startTime);
+          } else {
+            const startTime = Date.now();
+            set(countdownRef, { startTime });
+            set(startedCountdownRef, true); // Marcar que o countdown começou
+            startCountDown(startTime); // 👉 iniciar imediatamente o countdown
+          }
+        },
+        { onlyOnce: true }
+      );
+    } else {
+      const totalHours = Math.floor(remaining / 3600);
       const minutes = Math.floor(remaining % 3600 / 60);
       const seconds = remaining % 60;
 
-      hoursEl.innerText = String(hours).padStart(2, "0");
-      minutesEl.innerText = String(minutes).padStart(2, "0");
-      secondsEl.innerText = String(seconds).padStart(2, "0");
+      hoursUpEl.innerText = String(totalHours).padStart(2, "0");
+      minutesUpEl.innerText = String(minutes).padStart(2, "0");
+      secondsUpEl.innerText = String(seconds).padStart(2, "0");
 
-      const alertThreshold = 5400; // 1h30 em segundos
-      const alertEndThreshold = 60; // 1 minuto em segundos
+      description.innerText = "Faltam...";
 
-      // Aplica cor vermelha quando dentro do tempo crítico
-      if (remaining <= alertThreshold) {
-        countdownEl.style.borderColor = "red";
-        hoursEl.style.backgroundColor = "red";
-        minutesEl.style.backgroundColor = "red";
-        secondsEl.style.backgroundColor = "red";
-      } else {
-        countdownEl.style.borderColor = "#FFF";
-        hoursEl.style.backgroundColor = "rgba(27, 27, 27, 0.425)";
-        minutesEl.style.backgroundColor = "rgba(27, 27, 27, 0.425)";
-        secondsEl.style.backgroundColor = "rgba(27, 27, 27, 0.425)";
+      // Mudar para verde faltando 15 segundos
+      if (remaining <= 15) {
+        setTimerColor("green");
       }
+    }
+  }, 1000);
+}
 
-      // Função para tocar o som e ativar a animação por 15s
-      function triggerAlert() {
-        const alertAudio = new Audio("assets/sounds/alert.mp3");
-        alertAudio.loop = true;
+function startCountDown(startTime) {
+  clearInterval(countdownInterval);
 
-        // Tentativa de tocar o som (pode falhar sem interação do usuário)
-        alertAudio.play().catch(err => {
-          console.warn("Falha ao tocar som:", err);
-        });
+  let alertOn = false;
+  let alertEndOn = false;
+  let audioTimeout;
 
-        hoursEl.classList.add("alertTimer");
-        minutesEl.classList.add("alertTimer");
-        secondsEl.classList.add("alertTimer");
+  const alertOnRef = ref(database, "alertOn");
+  const alertEndOnRef = ref(database, "alertEndOn");
 
-        // Para som e remove animação após 15s
-        audioTimeout = setTimeout(() => {
-          alertAudio.pause();
-          alertAudio.currentTime = 0;
+  onValue(
+    alertOnRef,
+    snapshot => {
+      alertOn = snapshot.val() === true;
+    },
+    { onlyOnce: true }
+  );
+  onValue(
+    alertEndOnRef,
+    snapshot => {
+      alertEndOn = snapshot.val() === true;
+    },
+    { onlyOnce: true }
+  );
 
-          hoursEl.classList.remove("alertTimer");
-          minutesEl.classList.remove("alertTimer");
-          secondsEl.classList.remove("alertTimer");
-        }, 15000);
-      }
+  countdownInterval = setInterval(() => {
+    const now = Date.now();
+    const elapsed = Math.floor((now - startTime) / 1000);
+    const remaining = countdownDuration - elapsed;
 
-      // Alerta 1h30m - só dispara uma vez
-      if (remaining <= alertThreshold && !alertOn) {
-        alertOn = true;
-        set(alertOnRef, true);
-        triggerAlert();
-      }
+    if (remaining <= 0) {
+      description.innerText = "Tempo Esgotado!";
+      updateDisplay(0, 0, 0);
+      clearInterval(countdownInterval);
+      clearTimeout(audioTimeout);
+      return;
+    }
 
-      // Alerta 1 min - só dispara uma vez
-      if (remaining <= alertEndThreshold && !alertEndOn) {
-        alertEndOn = true;
-        set(alertEndOnRef, true);
-        triggerAlert();
-      }
-    }, 1000);
+    const hours = Math.floor(remaining / 3600);
+    const minutes = Math.floor(remaining % 3600 / 60);
+    const seconds = remaining % 60;
+
+    updateDisplay(hours, minutes, seconds);
+
+    // Alerta de 1h30m
+    if (remaining <= alertThreshold && !alertOn) {
+      alertOn = true;
+      set(alertOnRef, true);
+      setTimerColor("red");
+      triggerAlert("extreme"); // 🔔 usa o som EXTREME
+    }
+
+    // Alerta de 1 min
+    if (remaining <= alertEndThreshold && !alertEndOn) {
+      alertEndOn = true;
+      set(alertEndOnRef, true);
+      triggerAlert("extreme"); // 🔔 usa o som EXTREME
+    }
+
+    // Alerta para cada virada de hora
+    if (remaining % 3600 === 15) {
+      triggerAlert();
+    }
+  }, 1000);
+}
+
+function updateDisplay(hours, minutes, seconds) {
+  hoursEl.innerText = String(hours).padStart(2, "0");
+  minutesEl.innerText = String(minutes).padStart(2, "0");
+  secondsEl.innerText = String(seconds).padStart(2, "0");
+}
+
+function setTimerColor(color) {
+  if (color === "red") {
+    countdownEl.style.borderColor = "red";
+    hoursEl.style.backgroundColor = "red";
+    minutesEl.style.backgroundColor = "red";
+    secondsEl.style.backgroundColor = "red";
+  } else if (color === "green") {
+    countdownEl.style.borderColor = "green";
+    hoursEl.style.backgroundColor = "green";
+    minutesEl.style.backgroundColor = "green";
+    secondsEl.style.backgroundColor = "green";
+
+    countupEl.style.borderColor = "green";
+    hoursUpEl.style.backgroundColor = "green";
+    minutesUpEl.style.backgroundColor = "green";
+    secondsUpEl.style.backgroundColor = "green";
+  } else {
+    countdownEl.style.borderColor = "#FFF";
+    hoursEl.style.backgroundColor = "rgba(27, 27, 27, 0.425)";
+    minutesEl.style.backgroundColor = "rgba(27, 27, 27, 0.425)";
+    secondsEl.style.backgroundColor = "rgba(27, 27, 27, 0.425)";
   }
-});
+}
+
+function triggerAlert(soundType = "normal") {
+  let audioSrc;
+
+  if (soundType === "extreme") {
+    audioSrc = "assets/sounds/alert_extreme.mp3";
+  } else {
+    audioSrc = "assets/sounds/alert_clean.mp3";
+  }
+
+  const alertAudio = new Audio(audioSrc);
+  alertAudio.loop = true;
+
+  alertAudio.play().catch(err => {
+    console.warn("Falha ao tocar som:", err);
+  });
+
+  hoursEl.classList.add("alertTimer");
+  minutesEl.classList.add("alertTimer");
+  secondsEl.classList.add("alertTimer");
+
+  setTimeout(() => {
+    alertAudio.pause();
+    alertAudio.currentTime = 0;
+    hoursEl.classList.remove("alertTimer");
+    minutesEl.classList.remove("alertTimer");
+    secondsEl.classList.remove("alertTimer");
+  }, 16000);
+}
